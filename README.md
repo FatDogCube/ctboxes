@@ -12,4 +12,4 @@ pygetwindow
 ###Emulator 1920x1080
 
 Map max zoomed out first then exit to CT chapter 1
-![this screen](../blob/master/example.png) "Max zoomed in"
+![this screen](../master/example.png) "Max zoomed in"
