@@ -37,6 +37,29 @@ def click(box, pad=(0, 0, 0, 0)):
     pyautogui.sleep(0.5)
 
 
+def zoom(zoomer):
+    # this was orginally more decent
+    retries = 2
+    if r.exists(zoomer, 0.8):
+        print('Zoom looks good')
+    else:
+        zoomed = False
+        while not zoomed:
+            print('attempting to zoom out')
+            pyautogui.keyDown('ctrl')
+            pyautogui.scroll(-10)
+            pyautogui.keyUp('ctrl')
+            pyautogui.sleep(3)
+            zoomed = r.exists(zoomer, 0.8)
+            retries -= 1
+            if retries <= 0:
+                print('{} not found we failed sadface'.format(zoomer))
+                break
+    m1 = r.find('assets/combat/battle/exit-map.png', 0.9)
+    m1.click()
+    enter_map()
+
+
 def deploy(deploy_location, timeout=10, delay=0.5):
     while timeout > 0:
         click(deploy_location)
@@ -122,8 +145,11 @@ def enter_map():
 
 
 def run_boxes(runs):
+    first_run = True
     while runs > 0:
         enter_map()
+        if first_run:
+            zoom('scarecrowzoom.png')
         deploy(loc.cc_1)
         wait_gnk_splash()
         pyautogui.sleep(2)
@@ -137,4 +163,4 @@ def run_boxes(runs):
         runs -= 1
 
 
-run_boxes(int(input("runs: ")))
+# run_boxes(int(input("runs: ")))
