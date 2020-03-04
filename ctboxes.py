@@ -1,4 +1,3 @@
-
 import pyvisauto
 import pyautogui
 import pygetwindow
@@ -27,14 +26,14 @@ r = pyvisauto.Region(reg[0], reg[1], reg[2], reg[3])
 loc = Locations()
 
 
-def click(box, pad=(0, 0, 0, 0)):
+def click(box, pad=(0, 0, 0, 0), delay=0.5):
     # clicks for the constant Locations and adds
     rx = random.randint(box[0] - pad[3], box[0] + box[2] + pad[1])
     ry = random.randint(box[1] - pad[0], box[1] + box[3] + pad[2])
     rx += win.left
     ry += win.top + top_pad
     pyautogui.click(rx, ry)
-    pyautogui.sleep(0.5)
+    pyautogui.sleep(delay)
 
 
 def zoom(zoomer):
@@ -42,10 +41,12 @@ def zoom(zoomer):
     retries = 2
     if r.exists(zoomer, 0.8):
         print('Zoom looks good')
+        return
     else:
         zoomed = False
         while not zoomed:
             print('attempting to zoom out')
+            r.hover()
             pyautogui.keyDown('ctrl')
             pyautogui.scroll(-10)
             pyautogui.keyUp('ctrl')
@@ -55,9 +56,32 @@ def zoom(zoomer):
             if retries <= 0:
                 print('{} not found we failed sadface'.format(zoomer))
                 break
-    m1 = r.find('assets/combat/battle/exit-map.png', 0.9)
-    m1.click()
-    enter_map()
+        m1 = r.find('assets/combat/battle/exit-map.png', 0.9)
+        m1.click()
+        enter_map()
+
+
+def skip_battle_drops(battles=5):
+    exiting_battle = False
+    while battles > 0:
+        in_battle = pyautogui.pixelMatchesColor(win.left+920, win.top+20, (255, 186, 0), tolerance=10)
+        if exiting_battle and not in_battle:
+            click_drops()
+            battles -= 1
+            exiting_battle = False
+        if in_battle and not exiting_battle:
+            print('entering battle')
+            exiting_battle = True
+        pyautogui.sleep(0.2)
+
+
+def click_drops():
+    click_zone = (win.left+200, win.top+200, 2, 2)
+    print('exiting battle.')
+    pyautogui.sleep(4)
+    for i in range(6):
+        click(click_zone, delay=0.2)
+    return
 
 
 def deploy(deploy_location, timeout=10, delay=0.5):
@@ -139,6 +163,9 @@ def enter_map():
     r.wait('ctfarewellscarecrow.png', 5, 0.9)
     m1 = r.find('event_start.png', 0.9)
     m1.click()
+    if r.exists('assets/combat/enhancement.png', 0.8):
+        print('T-doll Storage full clean manually sorry.')
+        exit()
     r.wait('assets/combat/battle/plan.png', 10, 0.9)
     pyvisauto.sleep(1)
     print('Entered map')
@@ -150,17 +177,18 @@ def run_boxes(runs):
         enter_map()
         if first_run:
             zoom('scarecrowzoom.png')
+            first_run = False
         deploy(loc.cc_1)
         wait_gnk_splash()
         pyautogui.sleep(2)
         resupply(loc.cc_1)
         planning()
         path()
-        pyautogui.sleep(60)
+        skip_battle_drops(battles=3)
         print('waiting for turn to end')
         skip_battle_results()
         print('run complete')
         runs -= 1
 
 
-# run_boxes(int(input("runs: ")))
+run_boxes(int(input("runs: ")))
